@@ -242,18 +242,15 @@ def send_email(name,email,phone,message):
 
     message = f"Subject: New Message\n\nName:{name}\nEmail:{email}\nPhone:{phone}\nMessage:{message}"
 
-    connection = smtplib.SMTP("smtp.gmail.com",587)
-    connection.starttls()
+    with smtplib.SMTP_SSL("smtp.gmail.com",465,timeout=30) as connection :
+        connection.login(user=my_email,password=password)
 
-    connection.login(user=my_email,password=password)
+        connection.sendmail(
+            from_addr=my_email,
+            to_addrs=my_email,
+            msg=message
+        )
 
-    connection.sendmail(
-        from_addr=my_email,
-        to_addrs=my_email,
-        msg=message
-    )
-
-    connection.close()
 
 if __name__ == "__main__":
     app.run(debug=False)

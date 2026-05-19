@@ -12,7 +12,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from forms import CreatePostForm,RegisterForm,LoginForm,CommentForm
 import os
 from dotenv import load_dotenv
-import smtplib
+import resend
 
 load_dotenv()
 
@@ -223,34 +223,38 @@ def about():
     return render_template("about.html")
 
 
-@app.route("/contact",methods=['POST','GET'])
+@app.route("/contact", methods=['POST', 'GET'])
 def contact():
-    if request.method== 'POST':
+    if request.method == 'POST':
         name = request.form.get("name")
-        email= request.form.get("email")
+        email = request.form.get("email")
         phone = request.form.get("phone")
         message = request.form.get("message")
-        send_email(name,email,phone,message)
 
-        return render_template("contact.html",msg_sent=True)
+        send_email(name, email, phone, message)
+
+        return render_template("contact.html", msg_sent=True)
+
     return render_template("contact.html")
 
-def send_email(name,email,phone,message):
 
-    my_email = os.getenv('MY_EMAIL')
-    password = os.getenv('PASSWORD')
+def send_email(name, email, phone, message):
 
-    message = f"Subject: New Message\n\nName:{name}\nEmail:{email}\nPhone:{phone}\nMessage:{message}"
+    resend.api_key = os.getenv("RESEND_API_KEY")
 
-    with smtplib.SMTP_SSL("smtp.gmail.com",465,timeout=30) as connection :
-        connection.login(user=my_email,password=password)
+    resend.Emails.send({
+        "from": "onboarding@resend.dev",
+        "to": os.getenv("MY_EMAIL"),
+        "subject": "New Contact Form Message",
+        "html": f"""
+        <h2>New Message</h2>
 
-        connection.sendmail(
-            from_addr=my_email,
-            to_addrs=my_email,
-            msg=message
-        )
-
+        <p><strong>Name:</strong> {name}</p>
+        <p><strong>Email:</strong> {email}</p>
+        <p><strong>Phone:</strong> {phone}</p>
+        <p><strong>Message:</strong><br>{message}</p>
+        """
+    })
 
 if __name__ == "__main__":
     app.run(debug=False)

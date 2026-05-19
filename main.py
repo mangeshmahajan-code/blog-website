@@ -222,39 +222,49 @@ def delete_post(post_id):
 def about():
     return render_template("about.html")
 
-
-@app.route("/contact", methods=['POST', 'GET'])
+@app.route("/contact", methods=['GET', 'POST'])
 def contact():
+
     if request.method == 'POST':
+
         name = request.form.get("name")
         email = request.form.get("email")
         phone = request.form.get("phone")
         message = request.form.get("message")
 
-        send_email(name, email, phone, message)
+        email_sent = send_email(name, email, phone, message)
 
-        return render_template("contact.html", msg_sent=True)
+        if email_sent:
+            flash("Message sent successfully!")
+            return render_template("contact.html", msg_sent=True)
+
+        else:
+            flash("Sorry, email service is currently unavailable. Please try again later.")
+            return render_template("contact.html", msg_sent=False)
 
     return render_template("contact.html")
 
-
 def send_email(name, email, phone, message):
-
     resend.api_key = os.getenv("RESEND_API_KEY")
+    try:
+        resend.Emails.send({
+            "from": "onboarding@resend.dev",
+            "to": os.getenv("MY_EMAIL"),
+            "subject": "New Contact Form Message",
+            "html": f"""
+            <h2>New Message</h2>
 
-    resend.Emails.send({
-        "from": "onboarding@resend.dev",
-        "to": os.getenv("MY_EMAIL"),
-        "subject": "New Contact Form Message",
-        "html": f"""
-        <h2>New Message</h2>
+            <p><strong>Name:</strong> {name}</p>
+            <p><strong>Email:</strong> {email}</p>
+            <p><strong>Phone:</strong> {phone}</p>
+            <p><strong>Message:</strong><br>{message}</p>
+            """
+        })
+        return True
 
-        <p><strong>Name:</strong> {name}</p>
-        <p><strong>Email:</strong> {email}</p>
-        <p><strong>Phone:</strong> {phone}</p>
-        <p><strong>Message:</strong><br>{message}</p>
-        """
-    })
+    except Exception as e:
+        print(f"Email Error: {e}")
+        return False
 
 if __name__ == "__main__":
     app.run(debug=False)

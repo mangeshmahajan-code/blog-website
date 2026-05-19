@@ -1,0 +1,6 @@
+posts.db
+.env
+venv/
+__pycache__/
+day69.venv/
+.DS_Store

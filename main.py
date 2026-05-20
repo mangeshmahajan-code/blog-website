@@ -170,6 +170,18 @@ def show_post(post_id):
     all_comments = db.session.execute(db.select(Comment).where(Comment.post_id == post_id).order_by(Comment.id.desc())).scalars().all()
     return render_template("post.html", post=requested_post,form =form,comments = all_comments, gravatar=gravatar)
 
+@app.route("/delete-comment/<int:comment_id>")
+@admin_only
+def delete_comment(comment_id):
+    # Only admin (id=1) can delete
+    if current_user.id != 1:
+        abort(403)
+    comment = db.get_or_404(Comment, comment_id)
+    post_id = comment.parent_post.id
+    db.session.delete(comment)
+    db.session.commit()
+    return redirect(url_for('show_post', post_id=post_id))
+
 @app.route("/new-post", methods=["GET", "POST"])
 @admin_only
 def add_new_post():

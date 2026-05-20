@@ -167,7 +167,7 @@ def show_post(post_id):
         db.session.add(new_comment)
         db.session.commit()
         return redirect(url_for('show_post', post_id=post_id))
-    all_comments = db.session.execute(db.select(Comment).order_by(Comment.id.desc())).scalars().all()
+    all_comments = db.session.execute(db.select(Comment).where(Comment.post_id == post_id).order_by(Comment.id.desc())).scalars().all()
     return render_template("post.html", post=requested_post,form =form,comments = all_comments, gravatar=gravatar)
 
 @app.route("/new-post", methods=["GET", "POST"])
@@ -206,7 +206,7 @@ def edit_post(post_id):
         post.author = current_user
         post.body = edit_form.body.data
         db.session.commit()
-        return redirect(url_for("show_post", post_id=post.id))
+        return redirect(url_for("show_post", post_id=post_id))
     return render_template("make-post.html", form=edit_form, is_edit=True)
 
 @app.route("/delete/<int:post_id>")
